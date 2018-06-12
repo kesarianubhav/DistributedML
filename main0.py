@@ -1,10 +1,9 @@
 import uuid
-# from keras.models import Sequential
-# from keras.layers import Dense
+from keras.models import Sequential
+from keras.layers import Dense
 import numpy as np
 import math
-import redis
-from rq import Queue , Connection , Worker
+
 """
 
 1. Model Creator
@@ -46,24 +45,21 @@ from rq import Queue , Connection , Worker
 def sigmoid(x):
     if isinstance(x, Variable):
         return 1 / (1 + math.exp(-x.value))
-    elif isinstance(x,numpy.ndarray):
-        return 1 / (1 + np.exp(-x))
     else:
-        return 1/(1 + math.exp(-x))
+        return 1 / (1 + math.exp(-x))
 
 
 class Node(object):
-
     def __init__(self, inputs, activation):
         self.inputs = inputs
         self.output = Variable(None)
-        np.random.seed(0)
-        self.weights = np.random.rand(len(inputs))*(0.01)
+        self.weights = np.random.rand(len(inputs))
         self.activation = activation
         print(self.weights)
         self.id = str(uuid.uuid4())
         self.error = None
         self.status = 'waiting'
+
         self.break_calc()
 
     def compute(self):
@@ -83,7 +79,7 @@ class Node(object):
                 else:
                     self.output.value += input.get_output().value * self.weights[index]
             else:
-                print("Type Error")
+                print("Wrong input type")
 
         print(self.output)
         self.activate()
@@ -97,13 +93,13 @@ class Node(object):
 
     def break_calc(self):
         inputs = []
-        for inputw in self.inputs:
-            if isinstance(inputw, Variable):
-                inputs.append(inputw)
-            elif isinstance(inputw, Node):
-                inputs.append(inputw.get_output())
+        for input in self.inputs:
+            if isinstance(input, Variable):
+                inputs.append(input)
+            elif isinstance(input, Node):
+                inputs.append(input.get_output())
             else:
-                inputs.append(inputw)
+                inputs.append(input)
 
         return {'node_id':self.id, 'inputs': inputs, 'operation': '+', 'weights': self.weights.tolist()}
 
@@ -176,8 +172,6 @@ class Variable(object):
     # def __str__(self):
     #     return "{}".format(self.value)
 
-def bfs(Node):
-    pass
 
 graph = Graph()
 
@@ -201,8 +195,18 @@ graph.add(node3)
 # graph.run()
 
 # print(graph.get_output())
-print(node1.get_output())
 
+print(node1.break_calc()['inputs'][0].value)
+
+node1.compute()
+node2.compute()
+
+print("Node 1 output:", node1.get_output().value)
+print("Node 2 output:", node2.get_output().value)
+
+print(node2.break_calc()['inputs'][0].value)
+
+print(node3.break_calc()['inputs'][0].value)
 
 # import json
 # json.dumps(node1.break_calc())
