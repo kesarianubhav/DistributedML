@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
 from redis import StrictRedis
 from rq import Queue
+from flask_redis import Redis
+
 
 from random import randrange
 
@@ -8,9 +10,12 @@ from random import randrange
 REDIS_HOST = 'localhost'
 REDIS_PORT = 9999
 
-app = Flask(__name__)
+app = Flask(__app__)
+app.config['REDIS_HOST'] = REDIS_HOST
+app.config['REDIS_PORT'] = REDIS_PORT
+app.config['REDIS_DB'] = 0
+redis1 = Redis(app)
 
-q = Queue(connection=StrictRedis(host=REDIS_HOST, port=REDIS_PORT))
 
 
 @app.route('/')
