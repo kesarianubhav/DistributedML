@@ -10,7 +10,6 @@ from rq import Queue , Connection , Worker
 from flask import jsonify
 from qr import PriorityQueue
 import json
-from collections import defaultdict
 
 os.system('sudo service redis start')
 
@@ -102,7 +101,7 @@ class Node(object):
         np.random.seed(0)
         self.weights = np.random.rand(len(inputs))*(0.01)
         self.activation = activation
-        # print(self.weights)
+        print(self.weights)
         self.id = str(uuid.uuid4())
         self.error = None
         self.status = 'waiting'
@@ -176,28 +175,6 @@ class Layer(object):
 
     def get_output(self):
         self.output = [node.get_output() for node in self.nodes]
-#
-# class Edge(object):
-#     self.input=None
-#     self.output=None
-#
-#     def __init__(self):
-#         self.weight = list(np.random.randn(1,1))
-#     #
-#     # def set_input(self,a):
-#     #     self.input=a
-#     #
-#     # def set_output(self,a):
-#     #     self.output=a
-#
-#     def set_weight(self,a):
-#         self.weight=a
-#
-#     def connect(self,a,b):
-#         self.input = a
-#         sefl.output =b
-#
-
 
 
 class Graph(object):
@@ -208,7 +185,6 @@ class Graph(object):
 
     def add(self, node):
         self.nodes.append(node)
-
 
     def __str__(self):
         return "Graph"
@@ -269,30 +245,8 @@ def bubble_down(g):
         if i.get_output()==None:
             prq.push(i.break_calc(),i.get_layer())
 
-
-def id_view(g):
-    d = defaultdict(list)
-    for i in g.nodes:
-        for j in i.inputs:
-            d[(i.id)].append((j.id))
-
-    return d
-
-
-def reverse(g):
-    dict2 = defaultdict(list)
-    view = id_view(g)
-    for key in view.keys():
-        for i in view[key]:
-            dict2[i].append((key))
-
-    for key in dict2.keys():
-        for node in g.nodes :
-            if(node.id==key):
-                node.inputs = dict2[key]
-                node.layer+=bfs(node)
-                break
-    return g
+def priority_heap(calculations):
+    pass
 
 
 graph = Graph()
@@ -344,23 +298,9 @@ print("Node 3's output :" +str(node3.get_output().value))
     #i=jsonify(i)
 
 # bubble_down(graph)
-# print(len(prq))
-# # print(id_view(graph))
-# for i in graph.nodes :
-#     print("ID -> "+str(i.id) + " nodes = "+str(i.inputs)+ "\n\n")
-#
-# print("REVERSED GRAPH")
-#
-# for i in reverse(graph).nodes :
-#     print("ID -> "+str(i.id) + " nodes = "+str(i.inputs)+ "\n\n")
+print(len(prq))
 
 
-
-
-
-
-#
-# print(id_view(reverse(graph)))
 
 #
 # def get_a_calculation():
