@@ -196,7 +196,7 @@ graph.add(node3)
 
 # print(graph.get_output())
 
-print(node1.break_calc()['inputs'][0].value)
+#print(node1.break_calc()['inputs'][0].value)
 
 node1.compute()
 node2.compute()
@@ -204,9 +204,9 @@ node2.compute()
 print("Node 1 output:", node1.get_output().value)
 print("Node 2 output:", node2.get_output().value)
 
-print(node2.break_calc()['inputs'][0].value)
-
-print(node3.break_calc()['inputs'][0].value)
+# print(node2.break_calc()['inputs'][0].value)
+#
+# print(node3.break_calc()['inputs'][0].value)
 
 # import json
 # json.dumps(node1.break_calc())

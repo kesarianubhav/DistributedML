@@ -95,21 +95,33 @@ def sigmoid(x):
         return 1/(1 + math.exp(-x))
 
 
+def sig_derivative_wrt(z,x):
+    return z*(1-z)*x
+
+
+def mse(a,y):
+    return float((a-y)*(a-y))*0.5
+
+def mae(a,y):
+    return abs(a-y)
+
+def mse_derivative(a,y,x):
+    return ((a-y)*x)
+
 class Node(object):
     def __init__(self, inputs, activation):
         self.inputs = inputs
         self.output = Variable(None)
-        np.random.seed(0)
         self.weights = np.random.rand(len(inputs))*(0.01)
         self.activation = activation
-        # print(self.weights)
         self.id = str(uuid.uuid4())
-        self.error = None
+        self.gradients = np.zeros((len(inputs)))
         self.status = 'waiting'
-        # self.break_calc()
-        # self.layer = None
         self.layer=bfs(self)
-
+        self.error = 0
+        # print(self.weights)
+        # self.layer = None
+        # self.break_calc()
 
     def activate(self):
         self.output = self.activation(self.output)
@@ -117,10 +129,16 @@ class Node(object):
     def compute(self):
 
         operation = '+'
+        flag=1
 
-        if ( isinstance(input,Variable) and i.value ==None for i in self.inputs) or ( isinstance(input,Variable) and i.get_output().value==None for i in self.inputs) :
-            print("Cant be computed \n")
-        else:
+        for i in self.inputs:
+            if ( isinstance(i,Variable) and i.value==None) or (isinstance(i,Node) and i.get_output().value==None):
+                flag=0
+                break
+
+
+
+        if flag==1:
             for index, input in enumerate(self.inputs):
                 if isinstance(input, Variable):
                     if self.output.value is None:
@@ -136,12 +154,20 @@ class Node(object):
                 else:
                     print("Type Error")
 
-            print(self.output)
+            #print(self.output)
             self.activate()
             self.output = Variable(self.output)
+            self.status = 'calculated'
 
     def get_output(self):
+        # print ( type(self.output))
         return self.output
+
+
+    def set_output(self,value):
+        a = Variable(value )
+        self.output= Variable(value)
+        return a
 
     def get_layer(self):
         return self.layer
@@ -209,6 +235,8 @@ class Graph(object):
     def add(self, node):
         self.nodes.append(node)
 
+        # def add(self, node):
+        #     self.nodes.append(node)
 
     def __str__(self):
         return "Graph"
@@ -219,11 +247,13 @@ class Graph(object):
     def get_nodes(self):
         return self.nodes
 
+    def get_node_by_id(node_id):
+        for i in self.nodes:
+            if i.id == node_id:
+                return i
 
     def run(self):
         for node in self.nodes:
-
-            # node.compute()
 
             if node.status == 'waiting':
 
@@ -234,7 +264,7 @@ class Graph(object):
                         if input_node.status != 'calculated':
                             print("Has to wait for inputs")
                         else:
-                            print("Heelll")
+                            print("Calculated")
 
                 self.calculations.append(node.break_calc())
 
@@ -245,12 +275,105 @@ class Graph(object):
             self.calculations.append(node.break_calc())
         return self.calculations
 
-class CalculationGraph(object):
-    def __init__(self):
-        self.nodes = []
+    def forward_propogation(self):
+        for node in self.nodes:
+            node.compute()
 
-    def add(self, node):
-        self.nodes.append(node)
+    def last_layer_nodes(self):
+        last_layer_nodes = []
+        #print(len(self.nodes))
+        a = (self.nodes[len(self.nodes)-1])
+        #print(a.get_layer())
+        for i in self.nodes:
+            if (i.get_layer() == a.get_layer()):
+                last_layer_nodes.append(i)
+
+        return last_layer_nodes
+
+    def last_error(self,node,y):
+        a = node.get_output().value
+        # print(type(a))
+        # print(type(y))
+        dE_da = (a - y)
+        da_dz = ( dE_da ) * a*(1-a)
+        return da_dz
+
+    def error(self,node):
+        da_dz = node.get_output().value * (1-node.get_output().value)
+        return da_dz
+
+    def node_backprop(self,node):
+        for i in range(0,len(node.inputs)):
+            if (node.inputs[i].get_output().value==None):
+                print("Cant Backprop !! Output Empty")
+                break
+
+            node.gradient[i]+=node.output*sig_derivative_wrt(node.output,node.inputs[i].get_output().value)
+        for i in node.inputs:
+            i.output=Variable(node.gradient[i])
+
+            return node
+
+
+    # def backpropogation(self,Y_actual):
+    #     count = 0
+    #     Y_actual.reverse()
+    #     print(len(self.nodes))
+    #     for i in range(len(self.nodes)-1,-1,-1):
+    #         # print("chutiye !!!")
+    #         if self.nodes[i].get_output().value==None:
+    #             print("Cant Do Backprop !! Forwardprop Still Not Done !!")
+    #             break
+    #
+    #         else:
+    #             print("node no= "+str(i))
+    #             a = len(Y_actual)
+    #             b = len(self.last_layer_nodes())
+    #             print(a)
+    #             print(b)
+    #             assert(a==b) , "Y_ACTUAL AND Y_PREDICT FEATURES DO NOT MATCH "
+    #             j=0
+    #             if (count <=len(self.last_layer_nodes())):
+    #                 self.nodes[i].set_output (Variable(Y_actual[j]-self.nodes[i].get_output().value))
+    #                 self.nodes[i]=node_backprop(self.node[i])
+    #                 count+=1
+    #             else:
+    #                 self.nodes[i]=node_backprop(self.nodes[i])
+    #             j+=1
+
+    #
+    def backpropogation(self,Y_actual):
+        t_n = len(self.nodes)
+        l_n = len(self.last_layer_nodes())
+        for i in range ( t_n-1 , t_n - l_n -1 , -1 ):
+            self.nodes[i].error  = self.last_error(self.nodes[i] , Y_actual[0].value)
+            for j in range( 0,len(self.nodes[i].weights)):
+                self.nodes[i].gradients[j] = self.nodes[i].gradients[j] + self.nodes[i].error * self.nodes[i].inputs[j].get_output().value
+            for  j in range ( 0,len(self.nodes[i].inputs)):
+                self.nodes[i].inputs[j].error=self.nodes[i].inputs[j].error + self.nodes[i].error*self.nodes[i].weights[j]
+
+        for i in range ( t_n-l_n-1,-1,-1):
+            # print(i)
+            # print(type(self.nodes[i].inputs[0]))
+            for j in range(0,len(self.nodes[i].gradients)):
+                if isinstance( self.nodes[i].inputs[j],Node):
+                    self.nodes[i].gradients[j] = self.nodes[i].error* self.error(self.nodes[i])*self.nodes[i].inputs[j].get_output().value
+                if isinstance( self.nodes[i].inputs[j],Variable):
+                    self.nodes[i].gradients[j] = self.nodes[i].error* self.error(self.nodes[i])*self.nodes[i].inputs[j].value
+            for j in range(0,len(self.nodes[i].inputs)):
+                if isinstance( self.nodes[i].inputs[j],Node):
+                    self.nodes[i].inputs[j].error = self.nodes[i].inputs[j].error + self.nodes[i].error*self.nodes[i].weights[j]
+
+
+    def node_update(self,node,learning_rate):
+        for j in range ( 0 , len(node.gradients)-1):
+            node.weights[j]=node.weights[j]+(learning_rate*node.gradients[j])
+
+
+
+    def updation(self,learning_rate):
+        for i in self.nodes:
+            self.node_update(i,learning_rate)
 
 
 class Variable(object):
@@ -297,10 +420,14 @@ def reverse(g):
 
 graph = Graph()
 
+
+
 var1 = Variable(10)
 var2 = Variable(20)
 var3 = Variable(10)
 var4 = Variable(40)
+
+Y_actual=[Variable(80)]
 
 node1 = Node([var1, var2, var3, var4], sigmoid)
 node2 = Node([var1, var2, var3, var4], sigmoid)
@@ -310,21 +437,38 @@ node3 = Node([node1, node2], sigmoid)
 graph.add(node1)
 graph.add(node2)
 graph.add(node3)
+#
+# node1.compute()
+# node2.compute()
+# node3.compute()
+graph.forward_propogation()
 
+print("Node 1's output :" +str(node1.get_output().value))
+print("Node 2's output :" +str(node2.get_output().value))
+print("Node 3's output :" +str(node3.get_output().value))
+
+print("PART TWO !!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
+graph.backpropogation(Y_actual)
+
+print("Gradient at node1 = "+str(node1.gradients))
+print("Gradient at node2 = "+str(node2.gradients))
+print("Gradient at node3 = "+str(node3.gradients))
+
+graph.updation(learning_rate=0.5)
+
+
+
+
+
+
+
+# print(len(graph.last_layer_nodes()))
 # layer = Layer()
 # layer.add(node1)
 
 # graph.run()
 
 # print(graph.get_output())
-#node1.compute()
-#node1.compute()
-#node2.compute()
-#node3.compute()
-print("Node 1's output :" +str(node1.get_output().value))
-print("Node 2's output :" +str(node2.get_output().value))
-print("Node 3's output :" +str(node3.get_output().value))
-#
 # print("Node 3's layer :" +str(node3.layer))
 # print("Node 3's layer :" +str(node1.layer))
 

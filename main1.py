@@ -117,7 +117,7 @@ class Node(object):
 
         operation = '+'
 
-        if ( isinstance(input,Variable) and i.value ==None for i in self.inputs) or ( isinstance(input,Variable) and i.get_output().value==None for i in self.inputs) :
+        if ( isinstance(input,Variable) and any (i.value ==None) for i in self.inputs) or ( isinstance(input,Node) and any(i.get_output().value==None) for i in self.inputs) :
             print("Cant be computed \n")
         else:
             for index, input in enumerate(self.inputs):
@@ -272,9 +272,9 @@ graph.add(node3)
 
 # print(graph.get_output())
 #node1.compute()
-#node1.compute()
-#node2.compute()
-#node3.compute()
+node1.compute()
+node2.compute()
+node3.compute()
 print("Node 1's output :" +str(node1.get_output().value))
 print("Node 2's output :" +str(node2.get_output().value))
 print("Node 3's output :" +str(node3.get_output().value))
