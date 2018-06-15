@@ -367,7 +367,7 @@ class Graph(object):
                 self.nodes[i].inputs[j].error=self.nodes[i].inputs[j].error + self.nodes[i].error*self.nodes[i].weights[j]
 
         for i in range ( t_n-l_n-1,-1,-1):
-            # print(i)
+            print(i)
             # print(type(self.nodes[i].inputs[0]))
             for j in range(0,len(self.nodes[i].gradients)):
                 if isinstance( self.nodes[i].inputs[j],Node):
@@ -484,67 +484,73 @@ graph.add(node3)
 # print(str(node1.weights))
 # print(str(node2.weights))
 # print(str(node3.weights))
-
+#
 graph.forward_propogation()
-
-print("Node 1's output :" +str(node1.get_output().value))
-print("Node 2's output :" +str(node2.get_output().value))
-print("Node 3's output :" +str(node3.get_output().value))
-
+#
+# print("Node 1's output :" +str(node1.get_output().value))
+# print("Node 2's output :" +str(node2.get_output().value))
+# print("Node 3's output :" +str(node3.get_output().value))
+#
 graph.backpropogation(Y_actual)
-
-print("Gradient at node1 = "+str(node1.gradients))
-print("Gradient at node2 = "+str(node2.gradients))
-print("Gradient at node3 = "+str(node3.gradients))
-
+#
+# print("Gradient at node1 = "+str(node1.gradients))
+# print("Gradient at node2 = "+str(node2.gradients))
+# print("Gradient at node3 = "+str(node3.gradients))
+#
 graph.updation(learning_rate=0.5)
 
-print("PART TWO -VERIFICATION DATA !!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
-
-X =np.array([1,1,1,1]).reshape(4,1)
-# print(X.reshape(4,1))
-W1 = np.vstack((graph.nodes[0].weights , graph.nodes[1].weights))
-# print(W1.shape)
-Z1 = np.dot(W1,X).reshape(2,1)
-# print(Z1.shape)
-A1 = 1/(1+np.exp(-Z1))
-A1 = (A1.reshape(2,1))
-# print("Using numpy Layer 1's output:" +str(A1))
-# print(str(node1.get_output().value) +  str(node1.get_output().value))
-# assert
+print("Node 1 Weights="+str(node1.weights))
+print("Node 2 Weights="+str(node2.weights))
+print("Node 3 Weights="+str(node3.weights))
 
 
-W2 = graph.nodes[2].weights.reshape(1,2)
-Z2 = np.dot(W2,A1)
-A2 = 1 /(1+np.exp(Z2))
-# print("Using numpy Node 3's output:" +str(A2))
-Y=np.array([4])
-J = (np.sum(A2-Y)*(A2-Y)*0.5)
-
-
-dA2 = (A2-Y)
-# print(dA2.shape)
-dZ2 = (dA2 * (A2*(1-A2)))
-dW2 = np.dot(dZ2,A1.T)
+#
+# print("PART TWO -VERIFICATION DATA !!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
+#
+# X =np.array([1,1,1,1]).reshape(4,1)
+# # print(X.reshape(4,1))
+# W1 = np.vstack((graph.nodes[0].weights , graph.nodes[1].weights))
+# # print(W1.shape)
+# Z1 = np.dot(W1,X).reshape(2,1)
+# # print(Z1.shape)
+# A1 = 1/(1+np.exp(-Z1))
+# A1 = (A1.reshape(2,1))
+# # print("Using numpy Layer 1's output:" +str(A1))
+# # print(str(node1.get_output().value) +  str(node1.get_output().value))
+# # assert
+#
+#
+# W2 = graph.nodes[2].weights.reshape(1,2)
+# Z2 = np.dot(W2,A1)
+# A2 = 1 /(1+np.exp(Z2))
+# # print("Using numpy Node 3's output:" +str(A2))
+# Y=np.array([4])
+# J = (np.sum(A2-Y)*(A2-Y)*0.5)
+#
+#
+# dA2 = (A2-Y)
+# # print(dA2.shape)
+# dZ2 = (dA2 * (A2*(1-A2)))
+# dW2 = np.dot(dZ2,A1.T)
 # print(dW2)
-
-# print(A1.shape)
-# print(dZ2.shape)
-# print(W2.T.shape)
-dZ1=np.dot(W2.T,dZ2)*A1*(1-A1)
-assert(dZ1.shape==Z1.shape) ,"Shape Mismatch"
-# print(X.T.shape)
-dW1=np.dot(dZ1,X.T)
+#
+# # print(A1.shape)
+# # print(dZ2.shape)
+# # print(W2.T.shape)
+# dZ1=np.dot(W2.T,dZ2)*A1*(1-A1)
+# assert(dZ1.shape==Z1.shape) ,"Shape Mismatch"
+# # print(X.T.shape)
+# dW1=np.dot(dZ1,X.T)
 # print(dW1)
-print(node2.error)
-print(node1.error)
-print(node3.error)
-
-print("\n\n\n")
-
-# print(dA2)
-print(dZ2)
-print(dZ1)
+# print(node2.error)
+# print(node1.error)
+# print(node3.error)
+#
+# print("\n")
+#
+# # print(dA2)
+# print(dZ2)
+# print(dZ1)
 
 
 
