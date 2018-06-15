@@ -12,11 +12,15 @@ from qr import PriorityQueue
 import json
 from collections import defaultdict
 
+
+
 os.system('sudo service redis start')
 
 PORT = 6379
 HOST = 'localhost'
 prq =PriorityQueue('q',host=HOST,port=PORT)
+
+flag=0
 
 """
 
@@ -25,25 +29,13 @@ prq =PriorityQueue('q',host=HOST,port=PORT)
 2. Calculation Distributor
 3. Graph Creator
 """
+
+
 def dumper(obj):
     try:
         return obj.toJSON()
     except:
         return obj.__dict__
-
-
-# def validate_last_gradients(W1,X,W2,Y):
-#
-#     Z1 = np.dot(W1,X)
-#     A1 = 1/(1+np.exp(-Z1))
-#     Z2 = np.dot(W2,A1)
-#     A2 = 1/(1+np.exp(-Z2))
-#     J = np.sum((A2 - Y)*(A2-Y)*0.5)
-#     dA2 = (A2-Y)
-#     dZ2 = np.dot(dA2 , A1(1-A1).T)
-#     dW2 = np.dot(dZ2,A1.T)
-#
-#     return dW2
 
 
 # 1. Model Creator
@@ -124,16 +116,18 @@ def mse_derivative(a,y,x):
 
 class Node(object):
     def __init__(self, inputs, activation):
-        self.inputs = inputs
-        self.output = Variable(None)
-        self.weights = np.random.rand(len(inputs))*(0.01)
-        self.activation = activation
-        self.id = str(uuid.uuid4())
-        self.gradients = np.zeros((len(inputs)))
-        self.status = 'waiting'
-        self.layer=bfs(self)
-        self.error = 0
-        # print(self.weights)
+        if flag==0:
+            self.inputs = inputs
+            self.output = Variable(None)
+            self.weights = np.random.rand(len(inputs))*(0.01)
+            self.activation = activation
+            self.id = str(uuid.uuid4())
+            self.gradients = np.zeros((len(inputs)))
+            self.status = 'waiting'
+            self.layer=bfs(self)
+            self.error = 0
+
+            # print(self.weights)
         # self.layer = None
         # self.break_calc()
 
@@ -434,39 +428,14 @@ def reverse(g):
 
 graph = Graph()
 
-f = open("test_data.txt","r")
-# var1 = Variable(p[0])
-# var2 = Variable(None)
-# var3 = Variable(None)
-#
-# var4 = Variable(None)
-#
-# for i in f:
-#     # print(i)
-# p = i.split(" ")
-# for j in range(0 , len(p))  :
-#     #p[j] = Variable(int(p[j]))
-#     p[j] = Variable(float(p[j]))
-#     print(p[j].value)
-#
-#
-#
-# var1 = p[0]
-# var2 = p[1]
-# var3 = p[2]
-# var4 = p[3]
-#
-#
-# Y_actual=p[4]
 
-np.random.seed(0)
 
-var1 = Variable(1)
-var2 = Variable(1)
-var3 = Variable(1)
-var4 = Variable(1)
+var1 = Variable(10)
+var2 = Variable(20)
+var3 = Variable(10)
+var4 = Variable(40)
 
-Y_actual = [Variable(4)]
+Y_actual=[Variable(80)]
 
 node1 = Node([var1, var2, var3, var4], sigmoid)
 node2 = Node([var1, var2, var3, var4], sigmoid)
@@ -480,17 +449,13 @@ graph.add(node3)
 # node1.compute()
 # node2.compute()
 # node3.compute()
-#
-# print(str(node1.weights))
-# print(str(node2.weights))
-# print(str(node3.weights))
-
 graph.forward_propogation()
 
 print("Node 1's output :" +str(node1.get_output().value))
 print("Node 2's output :" +str(node2.get_output().value))
 print("Node 3's output :" +str(node3.get_output().value))
 
+print("PART TWO !!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
 graph.backpropogation(Y_actual)
 
 print("Gradient at node1 = "+str(node1.gradients))
@@ -499,52 +464,7 @@ print("Gradient at node3 = "+str(node3.gradients))
 
 graph.updation(learning_rate=0.5)
 
-print("PART TWO -VERIFICATION DATA !!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
 
-X =np.array([1,1,1,1]).reshape(4,1)
-# print(X.reshape(4,1))
-W1 = np.vstack((graph.nodes[0].weights , graph.nodes[1].weights))
-# print(W1.shape)
-Z1 = np.dot(W1,X).reshape(2,1)
-# print(Z1.shape)
-A1 = 1/(1+np.exp(-Z1))
-A1 = (A1.reshape(2,1))
-# print("Using numpy Layer 1's output:" +str(A1))
-# print(str(node1.get_output().value) +  str(node1.get_output().value))
-# assert
-
-
-W2 = graph.nodes[2].weights.reshape(1,2)
-Z2 = np.dot(W2,A1)
-A2 = 1 /(1+np.exp(Z2))
-# print("Using numpy Node 3's output:" +str(A2))
-Y=np.array([4])
-J = (np.sum(A2-Y)*(A2-Y)*0.5)
-
-
-dA2 = (A2-Y)
-# print(dA2.shape)
-dZ2 = (dA2 * (A2*(1-A2)))
-dW2 = np.dot(dZ2,A1.T)
-# print(dW2)
-
-# print(A1.shape)
-# print(dZ2.shape)
-# print(W2.T.shape)
-dZ1=np.dot(W2.T,dZ2)*A1*(1-A1)
-assert(dZ1.shape==Z1.shape) ,"Shape Mismatch"
-# print(X.T.shape)
-dW1=np.dot(dZ1,X.T)
-# print(dW1)
-print(node2.error)
-print(node1.error)
-print(node3.error)
-
-print("\n\n\n")
-
-# print(dA2)
-print(dZ2)
-print(dZ1)
 
 
 
